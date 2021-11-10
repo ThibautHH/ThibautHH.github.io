@@ -1,0 +1,34 @@
+name: Deploy to Github Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy-to-github-pages:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET Core SDK
+        uses: actions/setup-dotnet@v1.8.2
+        with:
+          dotnet-version: 6.x
+          include-prerelease: true
+
+      - name: Publish main project
+        run: dotnet publish GithubPages.csproj -c Release -o bin/Publish --nologo
+        
+      - name: Set 404.html to index.html
+        run: cp bin/Publish/wwwroot/index.html bin/Publish/wwwroot/404.html
+
+      - name: Add .nojekyll file
+        run: touch bin/Publish/wwwroot/.nojekyll
+        
+      - name: Commit bin/Publish to github-pages branch
+        uses: JamesIves/github-pages-deploy-action@3.7.1
+        with:
+          BRANCH: github-pages
+          FOLDER: bin/Publish/wwwroot
